@@ -3,22 +3,27 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CarsModule } from './cars/cars.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ConfigModule } from '@nestjs/config';
+import { BrandsModule } from './brands/brands.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({isGlobal: true}),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: '127.0.0.1', //process.env.DB_HOST, 
-      port: 5432,//parseInt(process.env.DB_PORT || '5432'),
-      database: 'car_dealership', //process.env.DB_NAME, 
-      username: 'postgres', //process.env.DB_USERNAME, 
-      password: 'postgres', //process.env.DB_PASSWORD,
+      host: process.env.DB_HOST, 
+      port: parseInt(process.env.DB_PORT || '5432'),
+      database: process.env.DB_NAME, 
+      username: process.env.DB_USERNAME, 
+      password: process.env.DB_PASSWORD,
       synchronize: true, 
       //entities: [], 
       autoLoadEntities: true
     }),
 
-    CarsModule],
+    CarsModule,
+
+    BrandsModule],
   controllers: [AppController],
   providers: [AppService],
 })

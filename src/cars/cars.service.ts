@@ -1,57 +1,53 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCarDto } from './dto/create-car.dto';
-import { Car } from './interfaces/car.model';
+import { Car } from './entities/car.entity';
 import { UpdateCarDto } from './dto/update-car.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CarsService {
-    private cars: Car[] = [
-        {
-            brand: "Chevrolet", 
-            model: "Spark", 
-            year: 2020
-        },
-        {
-            brand: "Toyota", 
-            model: "Land Cruiser", 
-            year: 2025
-        },
-        {
-            brand: "Volvo", 
-            model: "xc90", 
-            year: 2022
-        }
-    ];
+
+    constructor(
+        @InjectRepository(Car) private readonly carRepository: Repository<Car>,
+    ){}
     
-    getAll(): Car[] {
-        return this.cars;
+    getAll(): Promise<Car[]> {
+        return this.carRepository.find();
     }
 
-    getById(id: number): Car{
-        if(!this.cars[id])
+    async getById(id: string): Promise<Car>{
+        let car: Car | null = await this.carRepository.findOneBy({id});
+
+        if(car == null)
             throw new NotFoundException(`car with id ${id} not found`);
-        return this.cars[id];
-    }
-
-    create(car: CreateCarDto): Car{
-        this.cars.push(car); 
         return car;
     }
 
-    update(id: number, car: UpdateCarDto): Car{
-        if(!this.cars[id])
-            throw new NotFoundException(`car with id ${id} not found`);
-        this.cars[id] = car as CreateCarDto; 
-        return this.cars[id];
+    create(car: CreateCarDto): Promise<Car>{
+        const carNew: Car =  this.carRepository.create(car); 
+        return this.carRepository.save(carNew);
     }
 
-    delete(id: number){
-        if(!this.cars[id])
+    async update(id: string, car: UpdateCarDto): Promise<Car>{
+        let result = await  this.carRepository.update(id, car);
+        if (result.affected && result.affected < 1)
             throw new NotFoundException(`car with id ${id} not found`);
 
-        this.cars = this.cars.filter(car=> car!=this.cars[id]);
-//        if(id>0)
-//            this.cars = [...this.cars.slice(0,id), ...this.cars.slice(id+1,this.cars.length)];
+        return this.getById(id); 
     }
+
+    async delete(id: string): Promise<Car[]>{
+        await this.getById(id);
+        let result = await this.carRepository.delete(id);
+
+        if (result.affected && result.affected < 1)
+            throw new NotFoundException(`car with id ${id} not found`);
+
+        return this.getAll();
+        
+    }
+
+
 
 }
