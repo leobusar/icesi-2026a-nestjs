@@ -6,7 +6,7 @@ export class Car {
     @PrimaryGeneratedColumn('uuid')
     id: string; 
 
-    @ManyToOne(()=>Brand, (brand)=>brand.cars)
+    @ManyToOne(()=>Brand, (brand)=>brand.cars,{eager: true})
     brand: string;
 
     @Column('varchar', {unique: true})
